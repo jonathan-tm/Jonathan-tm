@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="index.css">
+    <title>Ramo de Flores</title>
+    
+
+
+<body>
+    <button onclick="groupFlowers()">Para la niña que quiero</button>
+    <div class="bouquet" id="bouquet">
+        <div class="flower">
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="center"></div>
+            <div class="stem"></div>
+        </div>
+        <div class="flower">
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="center"></div>
+            <div class="stem"></div>
+        </div>
+        <div class="flower">
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="center"></div>
+            <div class="stem"></div>
+        </div>
+    </div>
+    <div class="hearts">
+        <div class="heart" style="top: 10%; left: 5%; animation-delay: 0s;"></div>
+        <div class="heart" style="top: 20%; right: 10%; animation-delay: 1s;"></div>
+        <div class="heart" style="bottom: 15%; left: 20%; animation-delay: 2s;"></div>
+        <div class="heart" style="bottom: 10%; right: 25%; animation-delay: 3s;"></div>
+    </div>
+    <script>
+        function groupFlowers() {
+            const bouquet = document.getElementById('bouquet');
+            bouquet.style.transform = 'scale(0.5) translateY(-50px)';
+        }
+    </script>
+    </head>
+</body>
+
+</html>
