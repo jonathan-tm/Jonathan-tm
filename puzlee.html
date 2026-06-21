@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Memorama del Amor 💖</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial;
+}
+
+body{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#fff0f5,#ffc1e3,#ff9acd);
+}
+
+/* CONTENEDOR */
+#game{
+width:620px;
+background:#fff5fa;
+border:4px solid #ff69b4;
+border-radius:25px;
+box-shadow:0 0 25px rgba(255,105,180,.4);
+padding:15px;
+text-align:center;
+position:relative;
+}
+
+/* HUD */
+#hud{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:10px;
+color:#c2185b;
+font-weight:bold;
+}
+
+#barContainer{
+width:220px;
+height:14px;
+background:#ffd6e8;
+border-radius:20px;
+overflow:hidden;
+}
+
+#bar{
+height:100%;
+width:0%;
+background:#ff4f8b;
+transition:.3s;
+}
+
+/* TABLERO */
+#board{
+display:grid;
+gap:6px;
+justify-content:center;
+margin-top:10px;
+}
+
+/* CARTAS */
+.card{
+background:#ff69b4;
+border-radius:12px;
+cursor:pointer;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:20px;
+color:transparent;
+transition:.2s;
+height:45px;
+width:45px;
+}
+
+.card.flipped{
+background:white;
+color:#c2185b;
+transform:scale(1.05);
+}
+
+.card.matched{
+background:#ffd6e8;
+cursor:default;
+color:#c2185b;
+}
+
+/* SCREEN */
+.screen{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(255,245,250,.97);
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+z-index:10;
+padding:20px;
+text-align:center;
+}
+
+button{
+margin-top:15px;
+padding:12px 25px;
+border:none;
+border-radius:25px;
+background:#ff69b4;
+color:white;
+font-size:18px;
+cursor:pointer;
+}
+
+button:hover{
+transform:scale(1.05);
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+<!-- INTRO -->
+<div class="screen" id="intro">
+<h1>💖 Memorama del Amor 🌹</h1>
+
+<p style="line-height:1.6;margin-top:10px">
+Encuentra todas las parejas 💕<br>
+Nivel 1 → 4x4<br>
+Nivel 2 → 6x6<br>
+Nivel 3 → 5x5
+</p>
+
+<button onclick="startGame()">JUGAR</button>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+<div>Nivel <span id="level">1</span></div>
+
+<div id="barContainer">
+<div id="bar"></div>
+</div>
+
+<div>✔ <span id="found">0</span></div>
+</div>
+
+<!-- TABLERO -->
+<div id="board"></div>
+
+<!-- MENSAJE -->
+<div class="screen" id="msg" style="display:none;"></div>
+
+</div>
+
+<script>
+
+let level = 1;
+let found = 0;
+
+let first = null;
+let second = null;
+let lock = false;
+
+const emojis = [
+"❤️","🌹","💌","💍","💖","💘",
+"💞","💗","💝","💎","✨","🥰","🌸","💐","💫","💓"
+];
+
+const board = document.getElementById("board");
+
+function startGame(){
+document.getElementById("intro").style.display="none";
+startLevel();
+}
+
+function startLevel(){
+
+found = 0;
+first = null;
+second = null;
+lock = false;
+
+setBoard();
+createBoard();
+updateHUD();
+
+}
+
+function getSize(){
+return level==1?4:level==2?6:5;
+}
+
+function setBoard(){
+let size = getSize();
+board.style.gridTemplateColumns = `repeat(${size},50px)`;
+}
+
+function createBoard(){
+
+board.innerHTML="";
+
+let size = getSize();
+let total = size*size;
+let pairs = Math.floor(total/2);
+
+	// Asegurar que haya suficientes emojis para los pares: repetir la lista si hace falta
+	let pool = [];
+	while(pool.length < pairs){
+		pool = pool.concat(emojis);
+	}
+	let selected = pool.slice(0,pairs);
+	let cards = [...selected, ...selected];
+
+	if(total % 2 !== 0) {
+		cards.push('blank');
+	}
+
+	// Mezclar
+	cards.sort(()=>Math.random()-0.5);
+
+cards.forEach((emoji)=>{
+
+let card = document.createElement("div");
+card.classList.add("card");
+card.dataset.emoji = emoji;
+
+if(emoji === 'blank'){
+	card.classList.add('blank');
+	card.style.background = 'transparent';
+	card.style.cursor = 'default';
+	card.style.boxShadow = 'none';
+	card.style.border = '1px dashed rgba(255,105,180,0.4)';
+	card.innerHTML = '';
+}else{
+	card.onclick = ()=>flip(card);
+}
+
+board.appendChild(card);
+
+});
+
+}
+
+function flip(card){
+
+if(lock || card.classList.contains("flipped") || card.classList.contains("matched")) return;
+
+card.classList.add("flipped");
+card.innerHTML = card.dataset.emoji;
+
+if(!first){
+first = card;
+}else{
+second = card;
+lock = true;
+check();
+}
+
+}
+
+function check(){
+
+if(first.dataset.emoji === second.dataset.emoji){
+
+first.classList.add("matched");
+second.classList.add("matched");
+
+found++;
+updateHUD();
+
+reset();
+
+if(found === Math.floor((getSize()*getSize())/2)){
+nextLevel();
+}
+
+}else{
+
+setTimeout(()=>{
+
+first.classList.remove("flipped");
+second.classList.remove("flipped");
+
+first.innerHTML="";
+second.innerHTML="";
+
+reset();
+
+},500);
+
+}
+
+}
+
+function reset(){
+first=null;
+second=null;
+lock=false;
+}
+
+function updateHUD(){
+
+document.getElementById("level").innerText=level;
+
+let percent = (found / (getSize()*getSize()/2)) * 100;
+document.getElementById("bar").style.width = percent+"%";
+
+document.getElementById("found").innerText = found;
+
+}
+
+function nextLevel(){
+
+if(level==3){
+win();
+return;
+}
+
+level++;
+startLevel();
+
+}
+
+function win(){
+
+document.getElementById("msg").style.display="flex";
+
+document.getElementById("msg").innerHTML=`
+<h1>💕 ¡Ganaste!</h1>
+<p>Completaste todos los niveles 🌹</p>
+<button onclick="location.reload()">Jugar otra vez</button>
+`;
+
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Encuentra las Rosas 🌹</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial;
+}
+
+body{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#fff0f5,#ffc1e3,#ff9acd);
+}
+
+#game{
+width:420px;
+height:560px;
+background:#fff5fa;
+border-radius:25px;
+border:4px solid #ff69b4;
+box-shadow:0 0 25px rgba(255,105,180,.4);
+position:relative;
+overflow:hidden;
+text-align:center;
+padding-top:10px;
+}
+
+#hud{
+display:flex;
+justify-content:space-around;
+align-items:center;
+color:#c2185b;
+font-weight:bold;
+margin-bottom:10px;
+}
+
+#barContainer{
+width:150px;
+height:15px;
+background:#ffd6e8;
+border-radius:20px;
+overflow:hidden;
+}
+
+#bar{
+height:100%;
+width:0%;
+background:#ff4f8b;
+transition:.3s;
+}
+
+#board{
+display:grid;
+gap:6px;
+justify-content:center;
+margin-top:10px;
+}
+
+.cell{
+width:60px;
+height:60px;
+background:white;
+border-radius:15px;
+border:2px solid #ff69b4;
+font-size:26px;
+cursor:pointer;
+transition:.2s;
+}
+
+.cell:hover{
+transform:scale(1.1);
+background:#ffe4f0;
+}
+
+.screen{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(255,245,250,.97);
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+text-align:center;
+padding:20px;
+z-index:10;
+}
+
+button{
+margin-top:20px;
+padding:12px 25px;
+border:none;
+border-radius:25px;
+background:#ff69b4;
+color:white;
+font-size:18px;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+<!-- INICIO -->
+<div class="screen" id="startScreen">
+<h1>💖 Encuentra las Rosas 🌹</h1>
+
+<p style="line-height:1.6;margin-top:10px">
+🌹 Encuentra todas las rosas<br>
+💔 Si fallas pierdes vida<br>
+📈 Supera los 3 niveles
+</p>
+
+<button onclick="startGame()">JUGAR</button>
+</div>
+
+<!-- MENSAJE -->
+<div class="screen" id="msgScreen" style="display:none;"></div>
+
+<!-- HUD -->
+<div id="hud">
+<div>❤️ <span id="lives">10</span></div>
+<div>Nivel <span id="level">1</span></div>
+<div>🌹 <span id="found">0</span></div>
+<div id="barContainer"><div id="bar"></div></div>
+</div>
+
+<!-- TABLERO -->
+<div id="board"></div>
+
+</div>
+
+<script>
+
+let level=1;
+let lives=4;
+let found=0;
+
+const board=document.getElementById("board");
+const bar=document.getElementById("bar");
+
+const livesTxt=document.getElementById("lives");
+const levelTxt=document.getElementById("level");
+const foundTxt=document.getElementById("found");
+
+const msg=document.getElementById("msgScreen");
+
+function startGame(){
+document.getElementById("startScreen").style.display="none";
+resetGame();
+}
+
+function resetGame(){
+level=1;
+lives=5;
+found=0;
+createBoard();
+updateHUD();
+}
+
+function rosesNeeded(){
+return level==1?2: level==2?4:6;
+}
+
+function updateHUD(){
+livesTxt.innerText=lives;
+levelTxt.innerText=level;
+foundTxt.innerText=found;
+
+bar.style.width=(found/rosesNeeded())*100+"%";
+}
+
+function createBoard(){
+
+board.innerHTML="";
+
+let size=level+2; // 3x3, 4x4, 5x5
+board.style.gridTemplateColumns=`repeat(${size},60px)`;
+
+let total=size*size;
+let roses=rosesNeeded();
+
+// posiciones de rosas
+let rosePositions=[];
+
+while(rosePositions.length<roses){
+let r=Math.floor(Math.random()*total);
+if(!rosePositions.includes(r)){
+rosePositions.push(r);
+}
+}
+
+for(let i=0;i<total;i++){
+
+let cell=document.createElement("div");
+cell.className="cell";
+
+cell.innerHTML="❤️";
+
+cell.onclick=()=>{
+
+if(rosePositions.includes(i)){
+
+cell.innerHTML="🌹";
+
+found++;
+updateHUD();
+
+if(found>=roses){
+nextLevel();
+}
+
+}else{
+
+cell.innerHTML="💔";
+loseLife();
+
+}
+
+};
+
+board.appendChild(cell);
+
+}
+
+}
+
+function loseLife(){
+
+lives--;
+updateHUD();
+
+if(lives<=0){
+gameOver();
+}
+
+}
+
+function nextLevel(){
+
+if(level==3){
+win();
+return;
+}
+
+level++;
+lives=10;
+found=0;
+
+createBoard();
+updateHUD();
+
+}
+
+function gameOver(){
+
+msg.style.display="flex";
+
+msg.innerHTML=`
+<h1>💔 Perdiste</h1>
+<p>Te quedaste sin vidas</p>
+<button onclick="location.reload()">Jugar otra vez</button>
+`;
+
+}
+
+function win(){
+
+msg.style.display="flex";
+
+msg.innerHTML=`
+<h1>💕 ¡Ganaste!</h1>
+<p>Encontraste todas las rosas 🌹</p>
+<button onclick="location.reload()">Jugar otra vez</button>
+`;
+
+}
+
+</script>
+
+</body>
+</html>

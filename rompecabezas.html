@@ -1,0 +1,534 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rompecabezas Rosa</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --rosa-claro: #ffe7f0;
+      --rosa-fuerte: #f8a8c1;
+      --rosa-intermedio: #fdc2d5;
+      --borde: #f294ab;
+      --texto: #4d2430;
+      --blanco: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: radial-gradient(circle at top left, rgba(255, 220, 236, 0.9), transparent 35%),
+        linear-gradient(135deg, #fff4f8 0%, #ffe7f0 40%, #ffd6e3 100%);
+      color: var(--texto);
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 18px 18px 32px;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2rem, 2.8vw, 3.2rem);
+      letter-spacing: -0.04em;
+      text-align: center;
+    }
+
+    p {
+      margin: 0 0 1rem;
+      line-height: 1.6;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 22px;
+      padding: 18px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(242, 149, 171, 0.32);
+      box-shadow: 0 12px 30px rgba(250, 166, 193, 0.2);
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-start;
+      min-width: 260px;
+    }
+
+    .controls label,
+    .controls button,
+    .control-group {
+      font-size: 1rem;
+    }
+
+    .progress-wrapper {
+      width: 100%;
+      min-width: 240px;
+    }
+
+    .level-indicator {
+      font-weight: 700;
+      color: #8c3b5c;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(248, 164, 189, 0.35);
+      overflow: hidden;
+      border: 1px solid rgba(248, 164, 189, 0.5);
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #f787b1, #fdb1cd);
+      transition: width 0.4s ease;
+    }
+
+    .progress-text {
+      margin-top: 6px;
+      color: #7b3d55;
+      font-size: 0.95rem;
+    }
+
+    .controls button {
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #f787b1, #fdb1cd);
+      color: #fff;
+      padding: 12px 18px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .secondary-button {
+      background: #ffffff;
+      color: #9c4f74;
+      border: 1px solid rgba(249, 153, 179, 0.75);
+    }
+
+    .controls button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(248, 164, 189, 0.35);
+    }
+
+    .game-area {
+      display: grid;
+      grid-template-columns: 1fr minmax(320px, 520px) 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      min-height: 520px;
+      padding: 18px;
+      border-radius: 26px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid rgba(245, 175, 204, 0.5);
+      box-shadow: 0 16px 40px rgba(238, 163, 189, 0.16);
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      font-size: 1.3rem;
+      letter-spacing: -0.03em;
+    }
+
+    .pool {
+      min-height: 480px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      align-content: flex-start;
+      gap: 10px;
+      padding-top: 12px;
+      overflow: auto;
+    }
+
+    .board {
+      display: grid;
+      justify-content: center;
+      align-content: start;
+      gap: 4px;
+      min-height: 520px;
+      padding: 10px;
+      background: linear-gradient(180deg, rgba(255, 227, 236, 0.95), rgba(255, 249, 251, 0.95));
+      border-radius: 22px;
+    }
+
+    .slot {
+      border: 2px dashed rgba(242, 149, 171, 0.8);
+      border-radius: 18px;
+      width: 110px;
+      height: 110px;
+      display: grid;
+      place-items: center;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .slot.drag-over {
+      background: rgba(255, 197, 214, 0.55);
+      border-color: #f47c9a;
+    }
+
+    .piece {
+      width: 108px;
+      height: 108px;
+      border-radius: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 12px 24px rgba(187, 112, 141, 0.25);
+      cursor: grab;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+      touch-action: none;
+      margin: 4px;
+    }
+
+    .message {
+      margin-top: 12px;
+      border-radius: 18px;
+      padding: 14px 16px;
+      background: rgba(255, 240, 246, 0.95);
+      border: 1px solid rgba(245, 151, 183, 0.45);
+      color: #6e2d44;
+    }
+
+    @media (max-width: 960px) {
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .control-group {
+        width: 100%;
+        max-width: none;
+      }
+
+      .game-area {
+        grid-template-columns: 1fr;
+      }
+
+      .board,
+      .panel,
+      .pool {
+        min-height: auto;
+      }
+
+      .pool {
+        min-height: 260px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <h1>Rompecabezas Rosa</h1>
+    <section class="controls">
+      <div class="control-group">
+        <div id="level-indicator" class="level-indicator">Nivel 1 de 3</div>
+        <div class="progress-wrapper">
+          <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <div id="progress-text" class="progress-text">Progreso: 0%</div>
+        </div>
+      </div>
+      <button id="check-button" type="button">Verificar</button>
+      <button id="next-level-button" type="button" class="secondary-button" style="display:none;">Siguiente nivel</button>
+      <div id="message" class="message">Rompecabezas rosa listo con imagen predeterminada.</div>
+    </section>
+
+    <section class="game-area">
+      <div class="panel">
+        <h2>Piezas a la izquierda</h2>
+        <div id="left-pool" class="pool" ondragover="allowDrop(event)" ondrop="dropPiece(event)"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Centro del rompecabezas</h2>
+        <div id="board" class="board"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Piezas a la derecha</h2>
+        <div id="right-pool" class="pool" ondragover="allowDrop(event)" ondrop="dropPiece(event)"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const board = document.getElementById('board');
+    const leftPool = document.getElementById('left-pool');
+    const rightPool = document.getElementById('right-pool');
+    const message = document.getElementById('message');
+    const checkButton = document.getElementById('check-button');
+    const nextLevelButton = document.getElementById('next-level-button');
+    const levelIndicator = document.getElementById('level-indicator');
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+
+    const levels = [
+      { rows: 5, cols: 5, image: 'img/IMG-20250424-WA0005.jpg' },
+      { rows: 5, cols: 5, image: 'img/IMG-20250424-WA0048.jpg' },
+      { rows: 5, cols: 5, image: 'img/level3.svg' },
+    ];
+
+    let currentLevel = 0;
+    const totalLevels = levels.length;
+    let draggedPiece = null;
+    let draggedFrom = null;
+
+    function resetGame() {
+      board.innerHTML = '';
+      leftPool.innerHTML = '';
+      rightPool.innerHTML = '';
+      message.textContent = 'Cargando imagen predeterminada...';
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function createSlots(pieceWidth, pieceHeight) {
+      const { rows, cols } = levels[currentLevel];
+      board.innerHTML = '';
+      board.style.gridTemplateColumns = `repeat(${cols}, ${pieceWidth}px)`;
+      board.style.gridAutoRows = `${pieceHeight}px`;
+
+      for (let index = 0; index < cols * rows; index += 1) {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.dataset.index = String(index);
+        slot.addEventListener('dragover', allowDrop);
+        slot.addEventListener('dragenter', () => slot.classList.add('drag-over'));
+        slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+        slot.addEventListener('drop', dropPiece);
+        board.appendChild(slot);
+      }
+    }
+
+    function makePieceElement(piece, imageUrl, targetWidth, targetHeight, pieceWidth, pieceHeight) {
+      const element = document.createElement('div');
+      element.className = 'piece';
+      element.draggable = true;
+      element.dataset.index = String(piece.index);
+      element.style.width = `${pieceWidth}px`;
+      element.style.height = `${pieceHeight}px`;
+      element.style.backgroundImage = `url('${imageUrl}')`;
+      element.style.backgroundSize = `${targetWidth}px ${targetHeight}px`;
+      element.style.backgroundPosition = `-${piece.x}px -${piece.y}px`;
+      element.addEventListener('dragstart', dragStart);
+      element.addEventListener('touchstart', touchStart, { passive: false });
+      element.addEventListener('touchmove', touchMove, { passive: false });
+      element.addEventListener('touchend', touchEnd);
+      return element;
+    }
+
+    function buildPuzzle() {
+      const { rows, cols, image } = levels[currentLevel];
+      const imageUrl = image;
+      const img = new Image();
+      img.onload = () => {
+        const availableWidth = Math.min(480, img.width, window.innerWidth - 60);
+        const pieceWidth = Math.max(72, Math.floor(availableWidth / cols));
+        const pieceHeight = pieceWidth;
+        const boardWidth = pieceWidth * cols;
+        const boardHeight = pieceHeight * rows;
+
+        createSlots(pieceWidth, pieceHeight);
+
+        const pieces = [];
+        for (let row = 0; row < rows; row += 1) {
+          for (let col = 0; col < cols; col += 1) {
+            pieces.push({
+              index: row * cols + col,
+              x: col * pieceWidth,
+              y: row * pieceHeight,
+            });
+          }
+        }
+
+        const shuffled = shuffle([...pieces]);
+        const leftPieces = [];
+        const rightPieces = [];
+
+        shuffled.forEach((piece) => {
+          if (Math.random() < 0.5) {
+            leftPieces.push(piece);
+          } else {
+            rightPieces.push(piece);
+          }
+        });
+
+        if (leftPieces.length === 0) {
+          leftPieces.push(rightPieces.pop());
+        }
+        if (rightPieces.length === 0) {
+          rightPieces.push(leftPieces.pop());
+        }
+
+        leftPool.innerHTML = '';
+        rightPool.innerHTML = '';
+
+        leftPieces.forEach((piece) => {
+          leftPool.appendChild(makePieceElement(piece, imageUrl, boardWidth, boardHeight, pieceWidth, pieceHeight));
+        });
+
+        rightPieces.forEach((piece) => {
+          rightPool.appendChild(makePieceElement(piece, imageUrl, boardWidth, boardHeight, pieceWidth, pieceHeight));
+        });
+
+        message.textContent = 'Arrastra las piezas desde los lados al centro y completa el nivel.';
+      };
+      img.src = imageUrl;
+    }
+
+    function allowDrop(event) {
+      event.preventDefault();
+      if (event.currentTarget.classList.contains('slot')) {
+        event.currentTarget.classList.add('drag-over');
+      }
+    }
+
+    function dragStart(event) {
+      draggedPiece = event.target;
+      draggedFrom = event.target.parentElement;
+      event.dataTransfer.setData('text/plain', event.target.dataset.index);
+      event.dataTransfer.effectAllowed = 'move';
+    }
+
+    function dropPiece(event) {
+      event.preventDefault();
+      const zone = event.currentTarget;
+      zone.classList.remove('drag-over');
+      if (!draggedPiece || !zone) {
+        return;
+      }
+
+      const existingPiece = zone.querySelector('.piece');
+      if (zone.classList.contains('slot') && existingPiece && existingPiece !== draggedPiece) {
+        draggedFrom.appendChild(existingPiece);
+      }
+
+      zone.appendChild(draggedPiece);
+      draggedPiece = null;
+      draggedFrom = null;
+    }
+
+    function checkSolution() {
+      const slots = Array.from(board.querySelectorAll('.slot'));
+      if (slots.length === 0) {
+        message.textContent = 'El rompecabezas aún no se ha generado.';
+        return;
+      }
+
+      const correctCount = slots.reduce((count, slot) => {
+        const piece = slot.querySelector('.piece');
+        if (piece && piece.dataset.index === slot.dataset.index) {
+          return count + 1;
+        }
+        return count;
+      }, 0);
+
+      if (correctCount === slots.length) {
+        if (currentLevel < totalLevels - 1) {
+          const completedPercent = Math.round(((currentLevel + 1) / totalLevels) * 100);
+          progressFill.style.width = `${completedPercent}%`;
+          progressText.textContent = `Progreso: ${completedPercent}%`;
+          message.textContent = `¡Nivel ${currentLevel + 1} completo! Presiona Siguiente nivel para continuar.`;
+          nextLevelButton.style.display = 'inline-block';
+        } else {
+          progressFill.style.width = '100%';
+          progressText.textContent = 'Progreso: 100%';
+          message.textContent = '¡Felicidades! Completaste los 3 niveles. 🎉';
+          nextLevelButton.style.display = 'none';
+        }
+      } else {
+        message.textContent = `Has colocado ${correctCount} de ${slots.length} piezas en su lugar. Sigue así.`;
+      }
+    }
+
+    function touchStart(event) {
+      event.preventDefault();
+      draggedPiece = event.currentTarget;
+      draggedFrom = draggedPiece.parentElement;
+    }
+
+    function touchMove(event) {
+      event.preventDefault();
+      const touch = event.touches[0];
+      draggedPiece.style.position = 'absolute';
+      draggedPiece.style.zIndex = '30';
+      draggedPiece.style.left = `${touch.clientX - draggedPiece.offsetWidth / 2}px`;
+      draggedPiece.style.top = `${touch.clientY - draggedPiece.offsetHeight / 2}px`;
+      document.body.appendChild(draggedPiece);
+    }
+
+    function touchEnd(event) {
+      event.preventDefault();
+      const target = document.elementFromPoint(event.changedTouches[0].clientX, event.changedTouches[0].clientY);
+      const dropZone = target?.closest('.slot, .pool');
+      if (dropZone) {
+        dropZone.appendChild(draggedPiece);
+      }
+      draggedPiece.style.position = '';
+      draggedPiece.style.zIndex = '';
+      draggedPiece.style.left = '';
+      draggedPiece.style.top = '';
+      draggedPiece = null;
+      draggedFrom = null;
+    }
+
+    checkButton.addEventListener('click', checkSolution);
+    nextLevelButton.addEventListener('click', () => {
+      if (currentLevel < totalLevels - 1) {
+        currentLevel += 1;
+        startLevel(currentLevel);
+      }
+    });
+
+    function updateProgress() {
+      const percent = Math.round((currentLevel / totalLevels) * 100);
+      progressFill.style.width = `${percent}%`;
+      progressText.textContent = `Progreso: ${percent}%`;
+      levelIndicator.textContent = `Nivel ${currentLevel + 1} de ${totalLevels}`;
+    }
+
+    function startLevel(levelIndex) {
+      currentLevel = levelIndex;
+      board.innerHTML = '';
+      leftPool.innerHTML = '';
+      rightPool.innerHTML = '';
+      nextLevelButton.style.display = 'none';
+      message.textContent = 'Arrastra las piezas desde los lados al centro.';
+      updateProgress();
+      buildPuzzle();
+    }
+
+    resetGame();
+    startLevel(0);
+  </script>
+</body>
+</html>
